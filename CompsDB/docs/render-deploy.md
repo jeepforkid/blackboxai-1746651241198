@@ -58,11 +58,16 @@ git push -u origin main
    Name: compsdb
    Region: [نفس منطقة قاعدة البيانات]
    Branch: main
-   Root Directory: [اتركه فارغاً]
+   Root Directory: CompsDB    # مهم: يجب تحديد المجلد الذي يحتوي على package.json
    Environment: Node
    Build Command: npm install
    Start Command: npm start
    ```
+
+   ⚠️ **ملاحظة مهمة**: إذا ظهر خطأ `ENOENT: no such file or directory, open '/opt/render/project/src/package.json'`:
+   - تأكد من تحديد `Root Directory` بشكل صحيح
+   - يجب أن يكون المسار هو المجلد الذي يحتوي على ملف `package.json`
+   - في حالتنا، المجلد هو `CompsDB`
 
 5. أضف متغيرات البيئة:
    - اضغط "Advanced"
@@ -95,13 +100,35 @@ git push -u origin main
 
 ## 🔧 حل المشاكل الشائعة
 
-### ❌ خطأ: فشل البناء
-1. تأكد من وجود:
-   - `package.json`
-   - `package-lock.json`
-2. راجع سجلات البناء في "Events"
+### 1. خطأ عدم وجود package.json
+إذا ظهر خطأ `ENOENT: no such file or directory, package.json`:
+- افتح إعدادات الخدمة في Render
+- اذهب إلى قسم "Settings"
+- ابحث عن "Root Directory"
+- أدخل `CompsDB` (أو اسم المجلد الذي يحتوي على package.json)
+- اضغط "Save Changes"
+- اضغط "Manual Deploy" > "Clear build cache & deploy"
 
-### ❌ خطأ: التطبيق لا يعمل
+### 2. مشاكل أخرى في البناء
+- تأكد من وجود وصحة الملفات:
+  ```
+  CompsDB/
+  ├── package.json         # ملف تكوين المشروع
+  ├── package-lock.json    # ملف قفل الإصدارات
+  └── server.js           # نقطة البداية
+  ```
+- راجع سجلات البناء في "Events"
+- تأكد من صحة الأوامر في package.json:
+  ```json
+  {
+    "scripts": {
+      "start": "node server.js",
+      "build": "npm install"
+    }
+  }
+  ```
+
+### 3. مشاكل تشغيل التطبيق
 1. افحص "Logs"
 2. تأكد من متغيرات البيئة
 3. جرب:
