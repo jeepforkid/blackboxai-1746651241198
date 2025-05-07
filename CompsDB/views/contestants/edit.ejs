@@ -1,0 +1,166 @@
+<%- include('../partials/header') %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-edit ms-2"></i>
+                    تعديل بيانات المتسابقة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/contestants/edit/<%= contestant.id %>" method="POST">
+                    <!-- اسم المتسابقة -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">الاسم</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               value="<%= contestant.name %>"
+                               required>
+                    </div>
+
+                    <!-- العمر -->
+                    <div class="mb-3">
+                        <label for="age" class="form-label">العمر</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="age" 
+                               name="age" 
+                               value="<%= contestant.age || '' %>"
+                               min="1">
+                    </div>
+
+                    <!-- تاريخ الميلاد -->
+                    <div class="mb-3">
+                        <label for="birth_date" class="form-label">تاريخ الميلاد</label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="birth_date" 
+                               name="birth_date" 
+                               value="<%= contestant.birth_date ? contestant.birth_date.toISOString().split('T')[0] : '' %>">
+                    </div>
+
+                    <!-- العنوان -->
+                    <div class="mb-3">
+                        <label for="address" class="form-label">العنوان</label>
+                        <textarea class="form-control" 
+                                  id="address" 
+                                  name="address" 
+                                  rows="2"><%= contestant.address || '' %></textarea>
+                    </div>
+
+                    <!-- المشرفة -->
+                    <div class="mb-3">
+                        <label for="supervisor_id" class="form-label">المشرفة</label>
+                        <select name="supervisor_id" id="supervisor_id" class="form-select select2">
+                            <option value="">اختر المشرفة</option>
+                            <% supervisors.forEach(function(supervisor) { %>
+                                <option value="<%= supervisor.id %>" 
+                                        <%= contestant.supervisor_id === supervisor.id ? 'selected' : '' %>>
+                                    <%= supervisor.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="d-flex justify-content-between">
+                        <a href="/contestants" class="btn btn-secondary">
+                            <i class="fas fa-times ms-2"></i>
+                            إلغاء
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save ms-2"></i>
+                            حفظ التغييرات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- قسم الإحصائيات -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie ms-2"></i>
+                    إحصائيات المتسابقة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h3 class="text-primary"><%= contestant.competitions_count || 0 %></h3>
+                        <p class="text-muted">عدد المسابقات</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h3 class="text-<%= 
+                            contestant.average_score >= 90 ? 'success' : 
+                            contestant.average_score >= 80 ? 'primary' :
+                            contestant.average_score >= 70 ? 'info' :
+                            contestant.average_score >= 60 ? 'warning' : 'danger'
+                        %>">
+                            <%= contestant.average_score || '-' %>
+                        </h3>
+                        <p class="text-muted">متوسط الدرجات</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success"><%= contestant.highest_score || '-' %></h3>
+                        <p class="text-muted">أعلى درجة</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-danger"><%= contestant.lowest_score || '-' %></h3>
+                        <p class="text-muted">أدنى درجة</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- روابط سريعة -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <a href="/scores?contestant_id=<%= contestant.id %>" 
+                   class="btn btn-info w-100 mb-3">
+                    <i class="fas fa-star ms-2"></i>
+                    عرض درجات المتسابقة
+                </a>
+            </div>
+            <div class="col-md-6">
+                <form action="/contestants/delete/<%= contestant.id %>" 
+                      method="POST" 
+                      onsubmit="return confirm('هل أنت متأكد من حذف هذه المتسابقة؟');">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-trash ms-2"></i>
+                        حذف المتسابقة
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تأكيد الخروج عند وجود تغييرات
+    let formChanged = false;
+    
+    $('form :input').on('change input', function() {
+        formChanged = true;
+    });
+    
+    $(window).on('beforeunload', function() {
+        if (formChanged) {
+            return 'لديك تغييرات غير محفوظة. هل أنت متأكد من المغادرة؟';
+        }
+    });
+    
+    $('form').on('submit', function() {
+        $(window).off('beforeunload');
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>
