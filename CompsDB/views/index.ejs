@@ -1,0 +1,236 @@
+<%- include('partials/header') %>
+
+<div class="row">
+    <!-- إحصائيات عامة -->
+    <div class="col-md-12 mb-4">
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm bg-primary text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <h3><%= stats.contestants_count %></h3>
+                        <p class="mb-0">المتسابقات</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm bg-success text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-trophy fa-3x mb-3"></i>
+                        <h3><%= stats.competitions_count %></h3>
+                        <p class="mb-0">المسابقات</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm bg-info text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-tie fa-3x mb-3"></i>
+                        <h3><%= stats.supervisors_count %></h3>
+                        <p class="mb-0">المشرفات</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm bg-warning text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-star fa-3x mb-3"></i>
+                        <h3><%= stats.average_score.toFixed(1) %></h3>
+                        <p class="mb-0">متوسط الدرجات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- المسابقات القادمة -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt ms-2"></i>
+                    المسابقات القادمة
+                </h5>
+                <a href="/competitions" class="btn btn-primary btn-sm">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="card-body">
+                <% if (upcoming_competitions.length > 0) { %>
+                    <div class="list-group">
+                        <% upcoming_competitions.forEach(function(competition) { %>
+                            <a href="/competitions/details/<%= competition.id %>" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><%= competition.name %></h6>
+                                    <small class="text-muted">
+                                        <%= new Date(competition.competition_date).toLocaleDateString('ar-SA') %>
+                                    </small>
+                                </div>
+                                <p class="mb-1 text-muted">
+                                    <%= competition.location || 'المكان غير محدد' %>
+                                </p>
+                                <small>
+                                    <i class="fas fa-users ms-1"></i>
+                                    <%= competition.participants_count || 0 %> متسابقة
+                                </small>
+                            </a>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <p class="text-center text-muted mb-0">
+                        لا توجد مسابقات قادمة حالياً
+                    </p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- أعلى المتسابقات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-medal ms-2"></i>
+                    أعلى المتسابقات
+                </h5>
+                <a href="/contestants" class="btn btn-primary btn-sm">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="card-body">
+                <% if (top_contestants.length > 0) { %>
+                    <div class="list-group">
+                        <% top_contestants.forEach(function(contestant, index) { %>
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <% if (index === 0) { %>
+                                            <i class="fas fa-crown text-warning fa-2x"></i>
+                                        <% } else { %>
+                                            <span class="badge bg-primary rounded-pill">
+                                                <%= index + 1 %>
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0"><%= contestant.name %></h6>
+                                        <small class="text-muted">
+                                            <%= contestant.supervisor_name || 'لا يوجد مشرفة' %>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-<%= 
+                                            contestant.average_score >= 90 ? 'success' : 
+                                            contestant.average_score >= 80 ? 'primary' :
+                                            contestant.average_score >= 70 ? 'info' :
+                                            contestant.average_score >= 60 ? 'warning' : 'danger'
+                                        %>">
+                                            <%= contestant.average_score.toFixed(1) %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <p class="text-center text-muted mb-0">
+                        لا توجد بيانات متوفرة
+                    </p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="col-md-12">
+        <div class="row">
+            <!-- متوسط الدرجات حسب المسابقات -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="fas fa-chart-line ms-2"></i>
+                            متوسط الدرجات حسب المسابقات
+                        </h5>
+                        <canvas id="competitionsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- توزيع المتسابقات على المشرفات -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="fas fa-chart-pie ms-2"></i>
+                            توزيع المتسابقات على المشرفات
+                        </h5>
+                        <canvas id="supervisorsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- حاوية البيانات -->
+<div id="charts-data" style="display: none;" 
+     data-competitions='<%- JSON.stringify(competitions_stats) %>'
+     data-supervisors='<%- JSON.stringify(supervisors_stats) %>'></div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تهيئة البيانات
+    const chartsData = {
+        competitions: JSON.parse(document.getElementById('charts-data').dataset.competitions),
+        supervisors: JSON.parse(document.getElementById('charts-data').dataset.supervisors)
+    };
+
+    // رسم بياني للمسابقات
+    new Chart(document.getElementById('competitionsChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: chartsData.competitions.map(c => c.name),
+            datasets: [{
+                label: 'متوسط الدرجات',
+                data: chartsData.competitions.map(c => c.average_score),
+                borderColor: '#1e40af',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // رسم بياني للمشرفات
+    new Chart(document.getElementById('supervisorsChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: chartsData.supervisors.map(s => s.name),
+            datasets: [{
+                data: chartsData.supervisors.map(s => s.contestants_count),
+                backgroundColor: [
+                    '#1e40af',
+                    '#3b82f6',
+                    '#93c5fd',
+                    '#dbeafe'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+});
+</script>
+
+<%- include('partials/footer') %>
