@@ -1,0 +1,127 @@
+<%- include('partials/header') %>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="error-container my-5">
+            <!-- رمز الخطأ -->
+            <div class="error-code mb-4">
+                <h1 class="display-1 text-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <%= status || 500 %>
+                </h1>
+            </div>
+
+            <!-- رسالة الخطأ -->
+            <div class="error-message mb-4">
+                <h2 class="h4 text-muted">
+                    <%= message || 'حدث خطأ غير متوقع' %>
+                </h2>
+                <% if (error && error.stack && process.env.NODE_ENV === 'development') { %>
+                    <div class="alert alert-danger mt-3">
+                        <pre class="mb-0"><%= error.stack %></pre>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- روابط مفيدة -->
+            <div class="helpful-links">
+                <div class="row justify-content-center">
+                    <div class="col-auto">
+                        <a href="/" class="btn btn-primary">
+                            <i class="fas fa-home ms-2"></i>
+                            الصفحة الرئيسية
+                        </a>
+                    </div>
+                    <div class="col-auto">
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right ms-2"></i>
+                            العودة للصفحة السابقة
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- اقتراحات مفيدة -->
+            <div class="suggestions mt-5">
+                <h5 class="text-muted mb-3">ماذا يمكنك أن تفعل؟</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-redo ms-2"></i>
+                        حاول تحديث الصفحة
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clock ms-2"></i>
+                        انتظر قليلاً ثم حاول مرة أخرى
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-search ms-2"></i>
+                        تأكد من صحة الرابط المدخل
+                    </li>
+                    <% if (status === 404) { %>
+                        <li>
+                            <i class="fas fa-map ms-2"></i>
+                            استخدم القائمة الرئيسية للتنقل
+                        </li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تنسيقات خاصة بصفحة الخطأ -->
+<style>
+.error-container {
+    padding: 2rem;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.error-code {
+    color: #dc3545;
+    font-size: 5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-message {
+    color: #6c757d;
+}
+
+.suggestions {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.suggestions ul li {
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.suggestions ul li:hover {
+    color: #0d6efd;
+    transform: translateX(-5px);
+}
+
+.helpful-links .btn {
+    min-width: 180px;
+    margin: 0.5rem;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    direction: ltr;
+    text-align: left;
+}
+</style>
+
+<%- include('partials/footer') %>
