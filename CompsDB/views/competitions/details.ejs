@@ -1,0 +1,380 @@
+<%- include('../partials/header') %>
+
+<div class="row">
+    <!-- معلومات المسابقة -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    معلومات المسابقة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted">اسم المسابقة</label>
+                    <h5><%= competition.name %></h5>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted">تاريخ المسابقة</label>
+                    <h5><%= new Date(competition.competition_date).toLocaleDateString('ar-SA') %></h5>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted">المكان</label>
+                    <h5><%= competition.location || 'غير محدد' %></h5>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted">الوصف</label>
+                    <p><%= competition.description || 'لا يوجد وصف' %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- إحصائيات المسابقة -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie ms-2"></i>
+                    إحصائيات المسابقة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h3 class="text-primary"><%= competition.participants_count || 0 %></h3>
+                        <p class="text-muted">عدد المشاركات</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h3 class="text-<%= 
+                            competition.average_score >= 90 ? 'success' : 
+                            competition.average_score >= 80 ? 'primary' :
+                            competition.average_score >= 70 ? 'info' :
+                            competition.average_score >= 60 ? 'warning' : 'danger'
+                        %>">
+                            <%= competition.average_score || '-' %>
+                        </h3>
+                        <p class="text-muted">متوسط الدرجات</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success"><%= competition.highest_score || '-' %></h3>
+                        <p class="text-muted">أعلى درجة</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-danger"><%= competition.lowest_score || '-' %></h3>
+                        <p class="text-muted">أدنى درجة</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- إضافة متسابقات جديدة -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus ms-2"></i>
+                    إضافة متسابقات
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (unregisteredContestants.length > 0) { %>
+                    <form id="add-contestants-form">
+                        <div class="mb-3">
+                            <select multiple class="form-select select2" id="contestants" name="contestants[]">
+                                <% unregisteredContestants.forEach(function(contestant) { %>
+                                    <option value="<%= contestant.id %>">
+                                        <%= contestant.name %> 
+                                        <% if (contestant.supervisor_name) { %>
+                                            - <%= contestant.supervisor_name %>
+                                        <% } %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus-circle ms-2"></i>
+                            إضافة المتسابقات المحددة
+                        </button>
+                    </form>
+                <% } else { %>
+                    <p class="text-center text-muted mb-0">
+                        جميع المتسابقات مسجلات في هذه المسابقة
+                    </p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة المشاركات -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users ms-2"></i>
+                    المشاركات والدرجات
+                </h5>
+                <div class="btn-group">
+                    <a href="/competitions/<%= competition.id %>/export?format=excel" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel ms-1"></i>
+                        تصدير Excel
+                    </a>
+                    <a href="/competitions/<%= competition.id %>/export?format=csv" class="btn btn-info btn-sm">
+                        <i class="fas fa-file-csv ms-1"></i>
+                        تصدير CSV
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <% if (competition.participants && competition.participants.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table table-hover datatable">
+                            <thead>
+                                <tr>
+                                    <th>المتسابقة</th>
+                                    <th>المشرفة</th>
+                                    <th>الدرجة</th>
+                                    <th>العمليات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% competition.participants.forEach(function(participant) { %>
+                                    <tr>
+                                        <td><%= participant.contestant_name %></td>
+                                        <td><%= participant.supervisor_name || 'غير محدد' %></td>
+                                        <td>
+                                            <% if (participant.score) { %>
+                                                <span class="badge bg-<%= 
+                                                    participant.score >= 90 ? 'success' : 
+                                                    participant.score >= 80 ? 'primary' :
+                                                    participant.score >= 70 ? 'info' :
+                                                    participant.score >= 60 ? 'warning' : 'danger'
+                                                %>">
+                                                    <%= participant.score %>
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary">لم تسجل</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" 
+                                                        class="btn btn-primary edit-score"
+                                                        data-contestant-id="<%= participant.contestant_id %>"
+                                                        data-score="<%= participant.score || '' %>"
+                                                        data-bs-toggle="tooltip"
+                                                        title="تعديل الدرجة">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <form action="/competitions/<%= competition.id %>/remove-contestant/<%= participant.contestant_id %>" 
+                                                      method="POST" class="d-inline">
+                                                    <button type="submit" 
+                                                            class="btn btn-danger delete-confirm"
+                                                            data-bs-toggle="tooltip"
+                                                            title="حذف المشاركة">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p class="text-center text-muted">
+                        لا توجد مشاركات في هذه المسابقة حتى الآن
+                    </p>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- الرسوم البيانية -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar ms-2"></i>
+                            توزيع الدرجات
+                        </h5>
+                        <canvas id="scoresDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie ms-2"></i>
+                            توزيع المشاركات حسب المشرفات
+                        </h5>
+                        <canvas id="supervisorsDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة تعديل الدرجة -->
+<div class="modal fade" id="editScoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل الدرجة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-score-form">
+                    <input type="hidden" id="contestant_id">
+                    <div class="mb-3">
+                        <label for="score" class="form-label">الدرجة</label>
+                        <input type="number" class="form-control" id="score" 
+                               min="0" max="100" step="0.01" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="saveScore">حفظ الدرجة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- حاوية البيانات -->
+<div id="competition-data" style="display: none;" 
+     data-participants='<%- JSON.stringify(competition.participants || []) %>'></div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تهيئة البيانات
+    const competitionData = {
+        participants: JSON.parse(document.getElementById('competition-data').dataset.participants)
+    };
+
+    // تهيئة الرسوم البيانية
+    const scoresCtx = document.getElementById('scoresDistributionChart').getContext('2d');
+    const supervisorsCtx = document.getElementById('supervisorsDistributionChart').getContext('2d');
+
+    // رسم بياني لتوزيع الدرجات
+    new Chart(scoresCtx, {
+        type: 'bar',
+        data: {
+            labels: ['90-100', '80-89', '70-79', '60-69', 'أقل من 60'],
+            datasets: [{
+                label: 'عدد المتسابقات',
+                data: calculateScoresDistribution(),
+                backgroundColor: '#1e40af'
+            }]
+        }
+    });
+
+    // رسم بياني لتوزيع المشرفات
+    new Chart(supervisorsCtx, {
+        type: 'pie',
+        data: {
+            labels: calculateSupervisorsLabels(),
+            datasets: [{
+                data: calculateSupervisorsData(),
+                backgroundColor: [
+                    '#1e40af',
+                    '#3b82f6',
+                    '#93c5fd',
+                    '#dbeafe'
+                ]
+            }]
+        }
+    });
+
+    // دالة حساب توزيع الدرجات
+    function calculateScoresDistribution() {
+        const scores = [0, 0, 0, 0, 0]; // [90-100, 80-89, 70-79, 60-69, <60]
+        
+        competitionData.participants.forEach(function(participant) {
+            if (participant.score) {
+                if (participant.score >= 90) scores[0]++;
+                else if (participant.score >= 80) scores[1]++;
+                else if (participant.score >= 70) scores[2]++;
+                else if (participant.score >= 60) scores[3]++;
+                else scores[4]++;
+            }
+        });
+        
+        return scores;
+    }
+
+    // دالة حساب أسماء المشرفات
+    function calculateSupervisorsLabels() {
+        const supervisors = new Set();
+        
+        competitionData.participants.forEach(function(participant) {
+            if (participant.supervisor_name) {
+                supervisors.add(participant.supervisor_name);
+            }
+        });
+        
+        return Array.from(supervisors);
+    }
+
+    // دالة حساب توزيع المشرفات
+    function calculateSupervisorsData() {
+        const supervisorCounts = {};
+        
+        competitionData.participants.forEach(function(participant) {
+            if (participant.supervisor_name) {
+                supervisorCounts[participant.supervisor_name] = 
+                    (supervisorCounts[participant.supervisor_name] || 0) + 1;
+            }
+        });
+        
+        return Object.values(supervisorCounts);
+    }
+
+    // معالجة إضافة متسابقات
+    $('#add-contestants-form').submit(function(e) {
+        e.preventDefault();
+        const contestants = $('#contestants').val();
+        
+        $.post('/competitions/<%= competition.id %>/add-contestants', {
+            contestant_ids: contestants
+        }, function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء إضافة المتسابقات');
+            }
+        });
+    });
+
+    // معالجة تعديل الدرجة
+    $('.edit-score').click(function() {
+        const contestantId = $(this).data('contestant-id');
+        const currentScore = $(this).data('score');
+        
+        $('#contestant_id').val(contestantId);
+        $('#score').val(currentScore);
+        $('#editScoreModal').modal('show');
+    });
+
+    // حفظ الدرجة
+    $('#saveScore').click(function() {
+        const contestantId = $('#contestant_id').val();
+        const score = $('#score').val();
+        
+        $.post('/competitions/<%= competition.id %>/update-score', {
+            contestant_id: contestantId,
+            score: score
+        }, function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء تحديث الدرجة');
+            }
+        });
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>
