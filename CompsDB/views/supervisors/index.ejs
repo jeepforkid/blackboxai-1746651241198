@@ -1,0 +1,423 @@
+<%- include('../partials/header') %>
+
+<div class="row">
+    <!-- قسم إضافة مشرفة جديدة -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-tie ms-2"></i>
+                    إضافة مشرفة جديدة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/supervisors/add" method="POST">
+                    <!-- اسم المشرفة -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">الاسم</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <!-- تاريخ البدء -->
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">تاريخ البدء</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+
+                    <!-- المنطقة -->
+                    <div class="mb-3">
+                        <label for="region" class="form-label">المنطقة</label>
+                        <input type="text" class="form-control" id="region" name="region">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save ms-2"></i>
+                        حفظ المشرفة
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- قسم استيراد وتصدير البيانات -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-import ms-2"></i>
+                    استيراد وتصدير
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- استيراد البيانات -->
+                <form action="/supervisors/import" method="POST" enctype="multipart/form-data" class="mb-3">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">استيراد من ملف</label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".xlsx,.csv" required>
+                        <small class="text-muted">يدعم صيغ Excel و CSV</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-upload ms-2"></i>
+                        استيراد
+                    </button>
+                </form>
+
+                <!-- تصدير البيانات -->
+                <div class="btn-group w-100">
+                    <a href="/supervisors/export?format=excel" class="btn btn-success">
+                        <i class="fas fa-file-excel ms-1"></i>
+                        تصدير Excel
+                    </a>
+                    <a href="/supervisors/export?format=csv" class="btn btn-info">
+                        <i class="fas fa-file-csv ms-1"></i>
+                        تصدير CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم عرض المشرفات -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users-cog ms-2"></i>
+                    قائمة المشرفات
+                </h5>
+                <div class="input-group w-50">
+                    <input type="text" class="form-control live-search" 
+                           placeholder="بحث عن مشرفة...">
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>تاريخ البدء</th>
+                                <th>المنطقة</th>
+                                <th>عدد المتسابقات</th>
+                                <th>متوسط الدرجات</th>
+                                <th>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% supervisors.forEach(function(supervisor) { %>
+                                <tr>
+                                    <td><%= supervisor.name %></td>
+                                    <td><%= new Date(supervisor.start_date).toLocaleDateString('ar-SA') %></td>
+                                    <td><%= supervisor.region || '-' %></td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <%= supervisor.contestants_count || 0 %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (supervisor.average_score) { %>
+                                            <span class="badge bg-<%= 
+                                                supervisor.average_score >= 90 ? 'success' : 
+                                                supervisor.average_score >= 80 ? 'primary' :
+                                                supervisor.average_score >= 70 ? 'info' :
+                                                supervisor.average_score >= 60 ? 'warning' : 'danger'
+                                            %>">
+                                                <%= supervisor.average_score %>
+                                            </span>
+                                        <% } else { %>
+                                            <span class="text-muted">-</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/supervisors/edit/<%= supervisor.id %>" 
+                                               class="btn btn-primary"
+                                               data-bs-toggle="tooltip"
+                                               title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="/supervisors/delete/<%= supervisor.id %>" 
+                                                  method="POST" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-danger delete-confirm"
+                                                        data-bs-toggle="tooltip"
+                                                        title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" 
+                                                    class="btn btn-info view-contestants"
+                                                    data-id="<%= supervisor.id %>"
+                                                    data-bs-toggle="tooltip"
+                                                    title="عرض المتسابقات">
+                                                <i class="fas fa-users"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-success view-stats"
+                                                    data-id="<%= supervisor.id %>"
+                                                    data-bs-toggle="tooltip"
+                                                    title="عرض الإحصائيات">
+                                                <i class="fas fa-chart-line"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الإحصائيات -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie ms-2"></i>
+                            توزيع المتسابقات على المشرفات
+                        </h5>
+                        <canvas id="contestantsDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar ms-2"></i>
+                            متوسط درجات المتسابقات لكل مشرفة
+                        </h5>
+                        <canvas id="averageScoresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة عرض المتسابقات -->
+<div class="modal fade" id="viewContestantsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">متسابقات المشرفة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="contestants-container">
+                    <!-- سيتم تحميل المتسابقات هنا -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة عرض الإحصائيات -->
+<div class="modal fade" id="viewStatsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إحصائيات المشرفة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="stats-container">
+                    <!-- سيتم تحميل الإحصائيات هنا -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تهيئة الرسوم البيانية
+    const distributionCtx = document.getElementById('contestantsDistributionChart').getContext('2d');
+    const averageScoresCtx = document.getElementById('averageScoresChart').getContext('2d');
+
+    // رسم بياني لتوزيع المتسابقات
+    new Chart(distributionCtx, {
+        type: 'pie',
+        data: {
+            labels: ['مشرفة 1', 'مشرفة 2', 'مشرفة 3', 'مشرفة 4'],
+            datasets: [{
+                data: [12, 19, 8, 15],
+                backgroundColor: [
+                    '#1e40af',
+                    '#3b82f6',
+                    '#93c5fd',
+                    '#dbeafe'
+                ]
+            }]
+        }
+    });
+
+    // رسم بياني لمتوسط الدرجات
+    new Chart(averageScoresCtx, {
+        type: 'bar',
+        data: {
+            labels: ['مشرفة 1', 'مشرفة 2', 'مشرفة 3', 'مشرفة 4'],
+            datasets: [{
+                label: 'متوسط الدرجات',
+                data: [85, 78, 92, 88],
+                backgroundColor: '#1e40af'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // عرض متسابقات المشرفة
+    $('.view-contestants').click(function() {
+        const supervisorId = $(this).data('id');
+        
+        $.get(`/supervisors/${supervisorId}/contestants`, function(data) {
+            let html = '<div class="table-responsive">';
+            html += '<table class="table table-hover">';
+            html += '<thead><tr>';
+            html += '<th>الاسم</th>';
+            html += '<th>العمر</th>';
+            html += '<th>عدد المسابقات</th>';
+            html += '<th>متوسط الدرجات</th>';
+            html += '</tr></thead><tbody>';
+
+            data.forEach(contestant => {
+                html += '<tr>';
+                html += `<td>${contestant.name}</td>`;
+                html += `<td>${contestant.age || '-'}</td>`;
+                html += `<td><span class="badge bg-info">${contestant.competitions_count || 0}</span></td>`;
+                html += `<td>${
+                    contestant.average_score ? 
+                    `<span class="badge bg-${getScoreClass(contestant.average_score)}">${contestant.average_score}</span>` :
+                    '<span class="text-muted">-</span>'
+                }</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            
+            if (data.length === 0) {
+                html = '<p class="text-center text-muted">لا توجد متسابقات مسجلات</p>';
+            }
+
+            $('#contestants-container').html(html);
+            $('#viewContestantsModal').modal('show');
+        });
+    });
+
+    // عرض إحصائيات المشرفة
+    $('.view-stats').click(function() {
+        const supervisorId = $(this).data('id');
+        
+        $.get(`/supervisors/${supervisorId}/stats`, function(data) {
+            let html = `
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h3 class="text-primary">${data.total_contestants}</h3>
+                        <p class="text-muted">عدد المتسابقات</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h3 class="text-success">${data.total_competitions}</h3>
+                        <p class="text-muted">عدد المسابقات</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-info">${data.total_scores}</h3>
+                        <p class="text-muted">عدد الدرجات</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-${getScoreClass(data.average_score)}">${data.average_score || '-'}</h3>
+                        <p class="text-muted">متوسط الدرجات</p>
+                    </div>
+                </div>
+            `;
+
+            $('#stats-container').html(html);
+            $('#viewStatsModal').modal('show');
+        });
+    });
+
+    // دالة تحديد لون الشارة حسب الدرجة
+    function getScoreClass(score) {
+        if (score >= 90) return 'success';
+        if (score >= 80) return 'primary';
+        if (score >= 70) return 'info';
+        if (score >= 60) return 'warning';
+        return 'danger';
+    }
+
+    // البحث المباشر
+    $('.live-search').on('input', function() {
+        const searchTerm = $(this).val();
+        
+        $.get('/supervisors/search', { term: searchTerm }, function(data) {
+            const table = $('.datatable').DataTable();
+            table.clear();
+            
+            data.forEach(supervisor => {
+                table.row.add([
+                    supervisor.name,
+                    new Date(supervisor.start_date).toLocaleDateString('ar-SA'),
+                    supervisor.region || '-',
+                    `<span class="badge bg-info">${supervisor.contestants_count || 0}</span>`,
+                    supervisor.average_score ? 
+                        `<span class="badge bg-${getScoreClass(supervisor.average_score)}">${supervisor.average_score}</span>` :
+                        '<span class="text-muted">-</span>',
+                    getActionButtons(supervisor.id)
+                ]);
+            });
+            
+            table.draw();
+        });
+    });
+
+    // دالة إنشاء أزرار العمليات
+    function getActionButtons(id) {
+        return `
+            <div class="btn-group btn-group-sm">
+                <a href="/supervisors/edit/${id}" 
+                   class="btn btn-primary"
+                   data-bs-toggle="tooltip"
+                   title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="/supervisors/delete/${id}" 
+                      method="POST" class="d-inline">
+                    <button type="submit" 
+                            class="btn btn-danger delete-confirm"
+                            data-bs-toggle="tooltip"
+                            title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+                <button type="button" 
+                        class="btn btn-info view-contestants"
+                        data-id="${id}"
+                        data-bs-toggle="tooltip"
+                        title="عرض المتسابقات">
+                    <i class="fas fa-users"></i>
+                </button>
+                <button type="button" 
+                        class="btn btn-success view-stats"
+                        data-id="${id}"
+                        data-bs-toggle="tooltip"
+                        title="عرض الإحصائيات">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+            </div>
+        `;
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>
