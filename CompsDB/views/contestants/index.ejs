@@ -1,0 +1,375 @@
+<%- include('../partials/header') %>
+
+<div class="row">
+    <!-- قسم إضافة متسابقة جديدة -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus ms-2"></i>
+                    إضافة متسابقة جديدة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/contestants/add" method="POST">
+                    <!-- اسم المتسابقة -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">الاسم</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <!-- العمر -->
+                    <div class="mb-3">
+                        <label for="age" class="form-label">العمر</label>
+                        <input type="number" class="form-control" id="age" name="age" min="1">
+                    </div>
+
+                    <!-- تاريخ الميلاد -->
+                    <div class="mb-3">
+                        <label for="birth_date" class="form-label">تاريخ الميلاد</label>
+                        <input type="date" class="form-control" id="birth_date" name="birth_date">
+                    </div>
+
+                    <!-- العنوان -->
+                    <div class="mb-3">
+                        <label for="address" class="form-label">العنوان</label>
+                        <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                    </div>
+
+                    <!-- المشرفة -->
+                    <div class="mb-3">
+                        <label for="supervisor_id" class="form-label">المشرفة</label>
+                        <select name="supervisor_id" id="supervisor_id" class="form-select select2">
+                            <option value="">اختر المشرفة</option>
+                            <% supervisors.forEach(function(supervisor) { %>
+                                <option value="<%= supervisor.id %>">
+                                    <%= supervisor.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save ms-2"></i>
+                        حفظ المتسابقة
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- قسم استيراد وتصدير البيانات -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-import ms-2"></i>
+                    استيراد وتصدير
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- استيراد البيانات -->
+                <form action="/contestants/import" method="POST" enctype="multipart/form-data" class="mb-3">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">استيراد من ملف</label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".xlsx,.csv" required>
+                        <small class="text-muted">يدعم صيغ Excel و CSV</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-upload ms-2"></i>
+                        استيراد
+                    </button>
+                </form>
+
+                <!-- تصدير البيانات -->
+                <div class="btn-group w-100">
+                    <a href="/contestants/export?format=excel" class="btn btn-success">
+                        <i class="fas fa-file-excel ms-1"></i>
+                        تصدير Excel
+                    </a>
+                    <a href="/contestants/export?format=csv" class="btn btn-info">
+                        <i class="fas fa-file-csv ms-1"></i>
+                        تصدير CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم عرض المتسابقات -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users ms-2"></i>
+                    قائمة المتسابقات
+                </h5>
+                <div class="input-group w-50">
+                    <input type="text" class="form-control live-search" 
+                           placeholder="بحث عن متسابقة...">
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>العمر</th>
+                                <th>المشرفة</th>
+                                <th>عدد المسابقات</th>
+                                <th>متوسط الدرجات</th>
+                                <th>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% contestants.forEach(function(contestant) { %>
+                                <tr>
+                                    <td><%= contestant.name %></td>
+                                    <td><%= contestant.age || '-' %></td>
+                                    <td><%= contestant.supervisor_name || 'لا يوجد' %></td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <%= contestant.competitions_count || 0 %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (contestant.average_score) { %>
+                                            <span class="badge bg-<%= 
+                                                contestant.average_score >= 90 ? 'success' : 
+                                                contestant.average_score >= 80 ? 'primary' :
+                                                contestant.average_score >= 70 ? 'info' :
+                                                contestant.average_score >= 60 ? 'warning' : 'danger'
+                                            %>">
+                                                <%= contestant.average_score %>
+                                            </span>
+                                        <% } else { %>
+                                            <span class="text-muted">-</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/contestants/edit/<%= contestant.id %>" 
+                                               class="btn btn-primary"
+                                               data-bs-toggle="tooltip"
+                                               title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="/contestants/delete/<%= contestant.id %>" 
+                                                  method="POST" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-danger delete-confirm"
+                                                        data-bs-toggle="tooltip"
+                                                        title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" 
+                                                    class="btn btn-info view-scores"
+                                                    data-id="<%= contestant.id %>"
+                                                    data-bs-toggle="tooltip"
+                                                    title="عرض الدرجات">
+                                                <i class="fas fa-star"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الإحصائيات -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie ms-2"></i>
+                            توزيع المتسابقات حسب المشرفات
+                        </h5>
+                        <canvas id="supervisorsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar ms-2"></i>
+                            توزيع الأعمار
+                        </h5>
+                        <canvas id="ageDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة عرض درجات المتسابقة -->
+<div class="modal fade" id="viewScoresModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">درجات المتسابقة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="scores-container">
+                    <!-- سيتم تحميل الدرجات هنا -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تهيئة الرسوم البيانية
+    const supervisorsCtx = document.getElementById('supervisorsChart').getContext('2d');
+    const ageCtx = document.getElementById('ageDistributionChart').getContext('2d');
+
+    // رسم بياني لتوزيع المتسابقات حسب المشرفات
+    new Chart(supervisorsCtx, {
+        type: 'pie',
+        data: {
+            labels: ['مشرفة 1', 'مشرفة 2', 'مشرفة 3', 'مشرفة 4'],
+            datasets: [{
+                data: [12, 19, 8, 15],
+                backgroundColor: [
+                    '#1e40af',
+                    '#3b82f6',
+                    '#93c5fd',
+                    '#dbeafe'
+                ]
+            }]
+        }
+    });
+
+    // رسم بياني لتوزيع الأعمار
+    new Chart(ageCtx, {
+        type: 'bar',
+        data: {
+            labels: ['6-8', '9-11', '12-14', '15-17', '18+'],
+            datasets: [{
+                label: 'عدد المتسابقات',
+                data: [15, 25, 20, 10, 5],
+                backgroundColor: '#1e40af'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // عرض درجات المتسابقة
+    $('.view-scores').click(function() {
+        const contestantId = $(this).data('id');
+        
+        $.get(`/contestants/${contestantId}/scores`, function(data) {
+            let html = '<div class="table-responsive">';
+            html += '<table class="table table-hover">';
+            html += '<thead><tr>';
+            html += '<th>المسابقة</th>';
+            html += '<th>التاريخ</th>';
+            html += '<th>الدرجة</th>';
+            html += '<th>المشرفة</th>';
+            html += '</tr></thead><tbody>';
+
+            data.forEach(score => {
+                html += '<tr>';
+                html += `<td>${score.competition_name}</td>`;
+                html += `<td>${new Date(score.competition_date).toLocaleDateString('ar-SA')}</td>`;
+                html += `<td><span class="badge bg-${getScoreClass(score.score)}">${score.score}</span></td>`;
+                html += `<td>${score.supervisor_name}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            
+            if (data.length === 0) {
+                html = '<p class="text-center text-muted">لا توجد درجات مسجلة</p>';
+            }
+
+            $('#scores-container').html(html);
+            $('#viewScoresModal').modal('show');
+        });
+    });
+
+    // دالة تحديد لون الشارة حسب الدرجة
+    function getScoreClass(score) {
+        if (score >= 90) return 'success';
+        if (score >= 80) return 'primary';
+        if (score >= 70) return 'info';
+        if (score >= 60) return 'warning';
+        return 'danger';
+    }
+
+    // البحث المباشر
+    $('.live-search').on('input', function() {
+        const searchTerm = $(this).val();
+        
+        $.get('/contestants/search', { term: searchTerm }, function(data) {
+            const table = $('.datatable').DataTable();
+            table.clear();
+            
+            data.forEach(contestant => {
+                table.row.add([
+                    contestant.name,
+                    contestant.age || '-',
+                    contestant.supervisor_name || 'لا يوجد',
+                    `<span class="badge bg-info">${contestant.competitions_count || 0}</span>`,
+                    contestant.average_score ? 
+                        `<span class="badge bg-${getScoreClass(contestant.average_score)}">${contestant.average_score}</span>` :
+                        '<span class="text-muted">-</span>',
+                    getActionButtons(contestant.id)
+                ]);
+            });
+            
+            table.draw();
+        });
+    });
+
+    // دالة إنشاء أزرار العمليات
+    function getActionButtons(id) {
+        return `
+            <div class="btn-group btn-group-sm">
+                <a href="/contestants/edit/${id}" 
+                   class="btn btn-primary"
+                   data-bs-toggle="tooltip"
+                   title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="/contestants/delete/${id}" 
+                      method="POST" class="d-inline">
+                    <button type="submit" 
+                            class="btn btn-danger delete-confirm"
+                            data-bs-toggle="tooltip"
+                            title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+                <button type="button" 
+                        class="btn btn-info view-scores"
+                        data-id="${id}"
+                        data-bs-toggle="tooltip"
+                        title="عرض الدرجات">
+                    <i class="fas fa-star"></i>
+                </button>
+            </div>
+        `;
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>
