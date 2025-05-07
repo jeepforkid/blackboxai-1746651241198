@@ -1,0 +1,412 @@
+<%- include('../partials/header') %>
+
+<div class="row">
+    <!-- قسم إضافة درجة جديدة -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle ms-2"></i>
+                    إضافة درجة جديدة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/scores/add" method="POST">
+                    <!-- اختيار المتسابقة -->
+                    <div class="mb-3">
+                        <label for="contestant_id" class="form-label">المتسابقة</label>
+                        <select name="contestant_id" id="contestant_id" class="form-select select2" required>
+                            <option value="">اختر المتسابقة</option>
+                            <% contestants.forEach(function(contestant) { %>
+                                <option value="<%= contestant.id %>">
+                                    <%= contestant.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <!-- اختيار المسابقة -->
+                    <div class="mb-3">
+                        <label for="competition_id" class="form-label">المسابقة</label>
+                        <select name="competition_id" id="competition_id" class="form-select select2" required>
+                            <option value="">اختر المسابقة</option>
+                            <% competitions.forEach(function(competition) { %>
+                                <option value="<%= competition.id %>">
+                                    <%= competition.name %> - <%= new Date(competition.competition_date).toLocaleDateString('ar-SA') %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <!-- اختيار المشرفة -->
+                    <div class="mb-3">
+                        <label for="supervisor_id" class="form-label">المشرفة</label>
+                        <select name="supervisor_id" id="supervisor_id" class="form-select select2" required>
+                            <option value="">اختر المشرفة</option>
+                            <% supervisors.forEach(function(supervisor) { %>
+                                <option value="<%= supervisor.id %>">
+                                    <%= supervisor.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <!-- إدخال الدرجة -->
+                    <div class="mb-3">
+                        <label for="score" class="form-label">الدرجة</label>
+                        <input type="number" class="form-control" id="score" name="score" 
+                               min="0" max="100" step="0.01" required>
+                    </div>
+
+                    <!-- إضافة ملاحظات -->
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save ms-2"></i>
+                        حفظ الدرجة
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- قسم البحث المتقدم -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search ms-2"></i>
+                    البحث المتقدم
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="advanced-search-form">
+                    <div class="mb-3">
+                        <input type="text" class="form-control live-search" 
+                               placeholder="بحث عن متسابقة..." 
+                               name="contestant_name">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control live-search" 
+                               placeholder="بحث عن مسابقة..." 
+                               name="competition_name">
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <input type="number" class="form-control" 
+                                       placeholder="أقل درجة" 
+                                       name="min_score">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <input type="number" class="form-control" 
+                                       placeholder="أعلى درجة" 
+                                       name="max_score">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <input type="date" class="form-control" 
+                                       name="date_from">
+                                <small class="text-muted">من تاريخ</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <input type="date" class="form-control" 
+                                       name="date_to">
+                                <small class="text-muted">إلى تاريخ</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search ms-2"></i>
+                        بحث
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم عرض الدرجات -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list ms-2"></i>
+                    قائمة الدرجات
+                </h5>
+                <div class="btn-group">
+                    <a href="/scores/export?format=excel" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel ms-1"></i>
+                        تصدير Excel
+                    </a>
+                    <a href="/scores/export?format=csv" class="btn btn-info btn-sm">
+                        <i class="fas fa-file-csv ms-1"></i>
+                        تصدير CSV
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>المتسابقة</th>
+                                <th>المسابقة</th>
+                                <th>الدرجة</th>
+                                <th>المشرفة</th>
+                                <th>التاريخ</th>
+                                <th>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% scores.forEach(function(score) { %>
+                                <tr>
+                                    <td><%= score.contestant_name %></td>
+                                    <td><%= score.competition_name %></td>
+                                    <td>
+                                        <span class="badge bg-<%= score.score >= 90 ? 'success' : 
+                                                                   score.score >= 80 ? 'primary' :
+                                                                   score.score >= 70 ? 'info' :
+                                                                   score.score >= 60 ? 'warning' : 'danger' %>">
+                                            <%= score.score %>
+                                        </span>
+                                    </td>
+                                    <td><%= score.supervisor_name %></td>
+                                    <td><%= new Date(score.entry_date).toLocaleDateString('ar-SA') %></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-primary edit-score" 
+                                                    data-id="<%= score.id %>"
+                                                    data-bs-toggle="tooltip"
+                                                    title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form action="/scores/delete/<%= score.id %>" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-danger delete-confirm"
+                                                        data-bs-toggle="tooltip"
+                                                        title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الإحصائيات -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-line ms-2"></i>
+                            متوسط الدرجات
+                        </h5>
+                        <canvas id="averageScoresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-trophy ms-2"></i>
+                            أعلى الدرجات
+                        </h5>
+                        <canvas id="topScoresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة تعديل الدرجة -->
+<div class="modal fade" id="editScoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل الدرجة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editScoreForm">
+                    <input type="hidden" id="edit_score_id">
+                    <div class="mb-3">
+                        <label for="edit_score" class="form-label">الدرجة</label>
+                        <input type="number" class="form-control" id="edit_score" 
+                               min="0" max="100" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="edit_notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="saveEditScore">حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تهيئة الرسوم البيانية
+    const averageScoresCtx = document.getElementById('averageScoresChart').getContext('2d');
+    const topScoresCtx = document.getElementById('topScoresChart').getContext('2d');
+
+    // رسم بياني لمتوسط الدرجات
+    const averageScoresChart = new Chart(averageScoresCtx, {
+        type: 'line',
+        data: {
+            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+            datasets: [{
+                label: 'متوسط الدرجات',
+                data: [85, 78, 92, 88, 95, 90],
+                borderColor: '#1e40af',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // رسم بياني لأعلى الدرجات
+    const topScoresChart = new Chart(topScoresCtx, {
+        type: 'bar',
+        data: {
+            labels: ['متسابقة 1', 'متسابقة 2', 'متسابقة 3', 'متسابقة 4', 'متسابقة 5'],
+            datasets: [{
+                label: 'أعلى الدرجات',
+                data: [98, 96, 95, 94, 93],
+                backgroundColor: '#1e40af'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // معالجة تعديل الدرجة
+    $('.edit-score').click(function() {
+        const scoreId = $(this).data('id');
+        // هنا يمكنك إضافة كود لجلب بيانات الدرجة من الخادم
+        $('#edit_score_id').val(scoreId);
+        $('#editScoreModal').modal('show');
+    });
+
+    // حفظ تعديل الدرجة
+    $('#saveEditScore').click(function() {
+        const scoreId = $('#edit_score_id').val();
+        const newScore = $('#edit_score').val();
+        const notes = $('#edit_notes').val();
+
+        $.ajax({
+            url: `/scores/edit/${scoreId}`,
+            method: 'POST',
+            data: {
+                score: newScore,
+                notes: notes
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('حدث خطأ أثناء تحديث الدرجة');
+                }
+            },
+            error: function() {
+                alert('حدث خطأ أثناء الاتصال بالخادم');
+            }
+        });
+    });
+
+    // معالجة البحث المتقدم
+    $('#advanced-search-form').submit(function(e) {
+        e.preventDefault();
+        const formData = $(this).serialize();
+        
+        $.get('/scores/search?' + formData, function(data) {
+            // تحديث الجدول بنتائج البحث
+            updateTable(data);
+        });
+    });
+
+    // دالة تحديث الجدول
+    function updateTable(data) {
+        const table = $('.datatable').DataTable();
+        table.clear();
+        
+        data.forEach(function(score) {
+            table.row.add([
+                score.contestant_name,
+                score.competition_name,
+                `<span class="badge bg-${getScoreClass(score.score)}">${score.score}</span>`,
+                score.supervisor_name,
+                new Date(score.entry_date).toLocaleDateString('ar-SA'),
+                getActionButtons(score.id)
+            ]);
+        });
+        
+        table.draw();
+    }
+
+    // دالة تحديد لون الشارة حسب الدرجة
+    function getScoreClass(score) {
+        if (score >= 90) return 'success';
+        if (score >= 80) return 'primary';
+        if (score >= 70) return 'info';
+        if (score >= 60) return 'warning';
+        return 'danger';
+    }
+
+    // دالة إنشاء أزرار العمليات
+    function getActionButtons(id) {
+        return `
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-primary edit-score" 
+                        data-id="${id}"
+                        data-bs-toggle="tooltip"
+                        title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <form action="/scores/delete/${id}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger delete-confirm"
+                            data-bs-toggle="tooltip"
+                            title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        `;
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>
