@@ -1,0 +1,442 @@
+<%- include('../partials/header') %>
+
+<div class="row">
+    <!-- قسم إضافة مسابقة جديدة -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy ms-2"></i>
+                    إضافة مسابقة جديدة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/competitions/add" method="POST">
+                    <!-- اسم المسابقة -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم المسابقة</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <!-- وصف المسابقة -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">الوصف</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+
+                    <!-- تاريخ المسابقة -->
+                    <div class="mb-3">
+                        <label for="competition_date" class="form-label">تاريخ المسابقة</label>
+                        <input type="date" class="form-control" id="competition_date" name="competition_date" required>
+                    </div>
+
+                    <!-- مكان المسابقة -->
+                    <div class="mb-3">
+                        <label for="location" class="form-label">المكان</label>
+                        <input type="text" class="form-control" id="location" name="location">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save ms-2"></i>
+                        حفظ المسابقة
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- قسم البحث المتقدم -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search ms-2"></i>
+                    البحث المتقدم
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="advanced-search-form">
+                    <div class="mb-3">
+                        <input type="text" class="form-control live-search" 
+                               placeholder="بحث عن مسابقة..." 
+                               name="name">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" 
+                               placeholder="المكان" 
+                               name="location">
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <input type="date" class="form-control" 
+                                       name="date_from">
+                                <small class="text-muted">من تاريخ</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <input type="date" class="form-control" 
+                                       name="date_to">
+                                <small class="text-muted">إلى تاريخ</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search ms-2"></i>
+                        بحث
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم عرض المسابقات -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list ms-2"></i>
+                    قائمة المسابقات
+                </h5>
+                <div class="btn-group">
+                    <a href="/competitions/export?format=excel" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel ms-1"></i>
+                        تصدير Excel
+                    </a>
+                    <a href="/competitions/export?format=csv" class="btn btn-info btn-sm">
+                        <i class="fas fa-file-csv ms-1"></i>
+                        تصدير CSV
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>اسم المسابقة</th>
+                                <th>التاريخ</th>
+                                <th>المكان</th>
+                                <th>عدد المشاركات</th>
+                                <th>متوسط الدرجات</th>
+                                <th>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% competitions.forEach(function(competition) { %>
+                                <tr>
+                                    <td><%= competition.name %></td>
+                                    <td><%= new Date(competition.competition_date).toLocaleDateString('ar-SA') %></td>
+                                    <td><%= competition.location || '-' %></td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <%= competition.participants_count || 0 %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (competition.average_score) { %>
+                                            <span class="badge bg-<%= 
+                                                competition.average_score >= 90 ? 'success' : 
+                                                competition.average_score >= 80 ? 'primary' :
+                                                competition.average_score >= 70 ? 'info' :
+                                                competition.average_score >= 60 ? 'warning' : 'danger'
+                                            %>">
+                                                <%= competition.average_score %>
+                                            </span>
+                                        <% } else { %>
+                                            <span class="text-muted">-</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/competitions/edit/<%= competition.id %>" 
+                                               class="btn btn-primary"
+                                               data-bs-toggle="tooltip"
+                                               title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="/competitions/delete/<%= competition.id %>" 
+                                                  method="POST" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-danger delete-confirm"
+                                                        data-bs-toggle="tooltip"
+                                                        title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            <a href="/competitions/details/<%= competition.id %>" 
+                                               class="btn btn-info"
+                                               data-bs-toggle="tooltip"
+                                               title="التفاصيل">
+                                                <i class="fas fa-info-circle"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-success add-scores"
+                                                    data-id="<%= competition.id %>"
+                                                    data-bs-toggle="tooltip"
+                                                    title="إضافة درجات">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم الإحصائيات -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-line ms-2"></i>
+                            متوسط الدرجات في المسابقات
+                        </h5>
+                        <canvas id="averageScoresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-users ms-2"></i>
+                            عدد المشاركات في المسابقات
+                        </h5>
+                        <canvas id="participantsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة إضافة درجات -->
+<div class="modal fade" id="addScoresModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة درجات للمسابقة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bulk-scores-form">
+                    <input type="hidden" id="competition_id">
+                    <div id="contestants-list">
+                        <!-- سيتم تحميل قائمة المتسابقات هنا -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="saveBulkScores">حفظ الدرجات</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تهيئة الرسوم البيانية
+    const averageScoresCtx = document.getElementById('averageScoresChart').getContext('2d');
+    const participantsCtx = document.getElementById('participantsChart').getContext('2d');
+
+    // رسم بياني لمتوسط الدرجات
+    new Chart(averageScoresCtx, {
+        type: 'line',
+        data: {
+            labels: ['مسابقة 1', 'مسابقة 2', 'مسابقة 3', 'مسابقة 4'],
+            datasets: [{
+                label: 'متوسط الدرجات',
+                data: [85, 78, 92, 88],
+                borderColor: '#1e40af',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // رسم بياني لعدد المشاركات
+    new Chart(participantsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['مسابقة 1', 'مسابقة 2', 'مسابقة 3', 'مسابقة 4'],
+            datasets: [{
+                label: 'عدد المشاركات',
+                data: [15, 25, 20, 30],
+                backgroundColor: '#1e40af'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // إضافة درجات للمسابقة
+    $('.add-scores').click(function() {
+        const competitionId = $(this).data('id');
+        $('#competition_id').val(competitionId);
+        
+        // جلب المتسابقات غير المسجلات في المسابقة
+        $.get(`/competitions/${competitionId}/unregistered-contestants`, function(data) {
+            let html = '';
+            
+            if (data.length === 0) {
+                html = '<p class="text-center text-muted">جميع المتسابقات مسجلات في هذه المسابقة</p>';
+            } else {
+                data.forEach((contestant, index) => {
+                    html += `
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label">${contestant.name}</label>
+                                <input type="hidden" name="scores[${index}][contestant_id]" value="${contestant.id}">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" 
+                                       name="scores[${index}][score]"
+                                       min="0" max="100" step="0.01" required
+                                       placeholder="الدرجة">
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" 
+                                        name="scores[${index}][supervisor_id]" required>
+                                    <option value="">اختر المشرفة</option>
+                                    ${contestant.supervisor_id ? 
+                                        `<option value="${contestant.supervisor_id}" selected>
+                                            ${contestant.supervisor_name}
+                                        </option>` : ''}
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            $('#contestants-list').html(html);
+            $('#addScoresModal').modal('show');
+        });
+    });
+
+    // حفظ الدرجات
+    $('#saveBulkScores').click(function() {
+        const formData = {
+            competitionId: $('#competition_id').val(),
+            scores: []
+        };
+
+        // جمع بيانات الدرجات
+        $('#bulk-scores-form .row').each(function() {
+            const row = $(this);
+            formData.scores.push({
+                contestant_id: row.find('input[name$="[contestant_id]"]').val(),
+                score: row.find('input[name$="[score]"]').val(),
+                supervisor_id: row.find('select[name$="[supervisor_id]"]').val()
+            });
+        });
+
+        // إرسال البيانات
+        $.ajax({
+            url: '/competitions/bulk-scores',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('حدث خطأ أثناء حفظ الدرجات');
+                }
+            },
+            error: function() {
+                alert('حدث خطأ أثناء الاتصال بالخادم');
+            }
+        });
+    });
+
+    // البحث المباشر
+    $('.live-search').on('input', function() {
+        const searchTerm = $(this).val();
+        
+        $.get('/competitions/search', { term: searchTerm }, function(data) {
+            const table = $('.datatable').DataTable();
+            table.clear();
+            
+            data.forEach(competition => {
+                table.row.add([
+                    competition.name,
+                    new Date(competition.competition_date).toLocaleDateString('ar-SA'),
+                    competition.location || '-',
+                    `<span class="badge bg-info">${competition.participants_count || 0}</span>`,
+                    competition.average_score ? 
+                        `<span class="badge bg-${getScoreClass(competition.average_score)}">${competition.average_score}</span>` :
+                        '<span class="text-muted">-</span>',
+                    getActionButtons(competition.id)
+                ]);
+            });
+            
+            table.draw();
+        });
+    });
+
+    // دالة تحديد لون الشارة حسب الدرجة
+    function getScoreClass(score) {
+        if (score >= 90) return 'success';
+        if (score >= 80) return 'primary';
+        if (score >= 70) return 'info';
+        if (score >= 60) return 'warning';
+        return 'danger';
+    }
+
+    // دالة إنشاء أزرار العمليات
+    function getActionButtons(id) {
+        return `
+            <div class="btn-group btn-group-sm">
+                <a href="/competitions/edit/${id}" 
+                   class="btn btn-primary"
+                   data-bs-toggle="tooltip"
+                   title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="/competitions/delete/${id}" 
+                      method="POST" class="d-inline">
+                    <button type="submit" 
+                            class="btn btn-danger delete-confirm"
+                            data-bs-toggle="tooltip"
+                            title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+                <a href="/competitions/details/${id}" 
+                   class="btn btn-info"
+                   data-bs-toggle="tooltip"
+                   title="التفاصيل">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+                <button type="button" 
+                        class="btn btn-success add-scores"
+                        data-id="${id}"
+                        data-bs-toggle="tooltip"
+                        title="إضافة درجات">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+            </div>
+        `;
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>
