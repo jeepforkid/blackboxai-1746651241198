@@ -1,0 +1,146 @@
+</div> <!-- نهاية حاوية المحتوى -->
+
+    <!-- تذييل الصفحة -->
+    <footer class="bg-gray-800 text-white py-4 mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">
+                        <i class="fas fa-copyright ms-1"></i>
+                        <%= new Date().getFullYear() %> نظام إدارة المسابقات. جميع الحقوق محفوظة.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3" title="تويتر">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-white me-3" title="فيسبوك">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-white me-3" title="انستغرام">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-white" title="يوتيوب">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- تضمين Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- تضمين jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- تضمين Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- تضمين DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.5/datatables.min.js"></script>
+    
+    <!-- تضمين Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- السكربت العام -->
+    <script>
+        $(document).ready(function() {
+            // تفعيل Select2 للقوائم المنسدلة
+            $('.select2').select2({
+                dir: "rtl",
+                language: "ar"
+            });
+
+            // تفعيل DataTables للجداول
+            $('.datatable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/ar.json'
+                },
+                "order": [[0, "desc"]]
+            });
+
+            // تفعيل Tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // إخفاء رسائل التنبيه تلقائياً
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            // تأكيد الحذف
+            $('.delete-confirm').on('click', function(e) {
+                if (!confirm('هل أنت متأكد من عملية الحذف؟')) {
+                    e.preventDefault();
+                }
+            });
+
+            // تحديث الإحصائيات في الوقت الحقيقي (إذا كانت موجودة)
+            function updateStats() {
+                if ($('#stats-container').length) {
+                    $.get('/scores/stats', function(data) {
+                        // تحديث الإحصائيات هنا
+                        $('#total-scores').text(data.totalScores);
+                        $('#average-score').text(data.averageScore);
+                        // تحديث الرسوم البيانية إذا كانت موجودة
+                        if (typeof updateCharts === 'function') {
+                            updateCharts(data);
+                        }
+                    });
+                }
+            }
+
+            // تحديث الإحصائيات كل 5 دقائق
+            if ($('#stats-container').length) {
+                setInterval(updateStats, 300000);
+            }
+
+            // البحث المباشر
+            var searchTimeout;
+            $('.live-search').on('input', function() {
+                clearTimeout(searchTimeout);
+                var input = $(this);
+                searchTimeout = setTimeout(function() {
+                    $.get('/scores/live-search', {
+                        term: input.val()
+                    }, function(data) {
+                        // تحديث نتائج البحث هنا
+                        updateSearchResults(data);
+                    });
+                }, 500);
+            });
+        });
+
+        // دالة تحديث نتائج البحث
+        function updateSearchResults(data) {
+            var container = $('#search-results');
+            container.empty();
+            
+            if (data.length === 0) {
+                container.append('<p class="text-center text-muted">لا توجد نتائج</p>');
+                return;
+            }
+
+            data.forEach(function(item) {
+                // إضافة نتائج البحث حسب نوع البيانات
+                var html = `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">${item.name}</h5>
+                            <p class="card-text">${item.description || ''}</p>
+                        </div>
+                    </div>
+                `;
+                container.append(html);
+            });
+        }
+    </script>
+</body>
+</html>
