@@ -1,0 +1,152 @@
+<%- include('../partials/header') %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit ms-2"></i>
+                    تعديل المسابقة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/competitions/edit/<%= competition.id %>" method="POST">
+                    <!-- اسم المسابقة -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم المسابقة</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               value="<%= competition.name %>"
+                               required>
+                    </div>
+
+                    <!-- وصف المسابقة -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">الوصف</label>
+                        <textarea class="form-control" 
+                                  id="description" 
+                                  name="description" 
+                                  rows="3"><%= competition.description || '' %></textarea>
+                    </div>
+
+                    <!-- تاريخ المسابقة -->
+                    <div class="mb-3">
+                        <label for="competition_date" class="form-label">تاريخ المسابقة</label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="competition_date" 
+                               name="competition_date" 
+                               value="<%= competition.competition_date.toISOString().split('T')[0] %>"
+                               required>
+                    </div>
+
+                    <!-- مكان المسابقة -->
+                    <div class="mb-3">
+                        <label for="location" class="form-label">المكان</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="location" 
+                               name="location"
+                               value="<%= competition.location || '' %>">
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="d-flex justify-content-between">
+                        <a href="/competitions" class="btn btn-secondary">
+                            <i class="fas fa-times ms-2"></i>
+                            إلغاء
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save ms-2"></i>
+                            حفظ التغييرات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- قسم الإحصائيات -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie ms-2"></i>
+                    إحصائيات المسابقة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h3 class="text-primary"><%= competition.participants_count || 0 %></h3>
+                        <p class="text-muted">عدد المشاركات</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h3 class="text-<%= 
+                            competition.average_score >= 90 ? 'success' : 
+                            competition.average_score >= 80 ? 'primary' :
+                            competition.average_score >= 70 ? 'info' :
+                            competition.average_score >= 60 ? 'warning' : 'danger'
+                        %>">
+                            <%= competition.average_score || '-' %>
+                        </h3>
+                        <p class="text-muted">متوسط الدرجات</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success"><%= competition.highest_score || '-' %></h3>
+                        <p class="text-muted">أعلى درجة</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-danger"><%= competition.lowest_score || '-' %></h3>
+                        <p class="text-muted">أدنى درجة</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- روابط سريعة -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <a href="/competitions/details/<%= competition.id %>" 
+                   class="btn btn-info w-100 mb-3">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    عرض تفاصيل المسابقة
+                </a>
+            </div>
+            <div class="col-md-6">
+                <form action="/competitions/delete/<%= competition.id %>" 
+                      method="POST" 
+                      onsubmit="return confirm('هل أنت متأكد من حذف هذه المسابقة؟');">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-trash ms-2"></i>
+                        حذف المسابقة
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- السكربت الخاص بالصفحة -->
+<script>
+$(document).ready(function() {
+    // تأكيد الخروج عند وجود تغييرات
+    let formChanged = false;
+    
+    $('form :input').on('change input', function() {
+        formChanged = true;
+    });
+    
+    $(window).on('beforeunload', function() {
+        if (formChanged) {
+            return 'لديك تغييرات غير محفوظة. هل أنت متأكد من المغادرة؟';
+        }
+    });
+    
+    $('form').on('submit', function() {
+        $(window).off('beforeunload');
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>
